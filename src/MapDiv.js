@@ -1,11 +1,35 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import MapView from "@arcgis/core/views/MapView";
 import WebMap from "@arcgis/core/WebMap";
+
+import Dropzone from "react-dropzone";
 
 import "./MapDiv.css";
 
 function MapDiv() {
   const mapDiv = useRef(null);
+  const [view, setView] = useState(null);
+
+  const onDrop = useCallback(
+    (event) => {
+      event.stopPropagation();
+      if (!view) return;
+
+      const imageURL = event.dataTransfer.getData("image");
+      const geometry = view.toMap(event.nativeEvent);
+      const graphic = {
+        geometry,
+        symbol: {
+          type: "picture-marker",
+          url: imageURL,
+          height: 50,
+          width: 50,
+        },
+      };
+      view.graphics.add(graphic);
+    },
+    [view]
+  );
 
   useEffect(() => {
     if (mapDiv.current) {
@@ -15,41 +39,28 @@ function MapDiv() {
         },
       });
 
-      const view = new MapView({
+      const mapView = new MapView({
         container: mapDiv.current,
         map: webmap,
       });
 
-      view.when(() => {
-        console.log("view ready");
-      });
-
-      view.container.addEventListener("dragover", (event) => {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
-      });
-      view.container.addEventListener("drop", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        console.log(event);
-        const imageURL = event.dataTransfer.getData("image");
-        const geometry = view.toMap(event);
-        const graphic = {
-            geometry,
-            symbol: {
-                type: "picture-marker",
-                url: imageURL,
-                height: 50,
-                width: 50
-            }
-        };
-        console.log(graphic)
-        view.graphics.add(graphic);
-      });
+      setView(mapView);
     }
   }, [mapDiv]);
-
-  return <div className="mapDiv" ref={mapDiv}></div>;
+  return (
+    <Dropzone onDrop={(files) => console.log(files)}>
+      {({ getRootProps }) => (
+        <div
+          {...getRootProps({
+            className: "dropContainer",
+            onDrop,
+          })}
+        >
+          <div className="mapDiv" ref={mapDiv}></div>
+        </div>
+      )}
+    </Dropzone>
+  );
 }
 
 export default MapDiv;
