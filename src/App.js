@@ -1,35 +1,19 @@
-import { useRef, useEffect } from "react";
-import MapView from "@arcgis/core/views/MapView";
-import WebMap from "@arcgis/core/WebMap";
+import MapDiv from "./MapDiv";
 
-import "./App.css"; 
+import "./App.css";
 
 function App() {
 
-  const mapDiv = useRef(null);
-
-  useEffect(() => {
-    if (mapDiv.current) {
-      /**
-       * Initialize application
-       */
-      const webmap = new WebMap({
-        portalItem: {
-          id: "aa1d3f80270146208328cf66d022e09c"
-        }
-      });
-
-      const view = new MapView({
-        container: mapDiv.current,
-        map: webmap
-      });
-    }
-  }, []);
+  const onDragStarted = (e) => {
+    e.dataTransfer.setData("image", e.target.src);
+  }
 
   return (
     <div className="mapContainer">
-      <div className="mapDiv" ref={mapDiv}></div>
-      <div className="listArea"></div>
+      <MapDiv />
+      <div className="listArea" onDragStart={onDragStarted}>
+        <img id="symbol" src="https://arcgis.github.io/arcgis-samples-javascript/sample-data/layers-ogcfeaturelayer/windmill.png" height="50px" width="50px" alt="Symbol" />
+      </div>
     </div>
   );
 }
